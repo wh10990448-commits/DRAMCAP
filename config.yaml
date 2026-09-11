@@ -1,0 +1,215 @@
+preprocess:
+  CORE: 9
+  MAX_ROIS: 9
+  MIN_ROIS: 4
+  BATCH: 32
+  WORKERS: 6
+  MIN_AREA: 200
+  MIN_SIDE: 10
+  YOLOE26_CONF: 0.20
+  USE_YOLO_POSE: true
+  RESUME_PREPROCESS: false
+  ROI_ONLINE: true
+  ROI_SEG_GRID: 12
+  ROI_POOL_GRID: 12
+  batch_size: 28
+  num_workers: 4
+  min_area: 50
+  min_side: 10
+  max_rois: 9
+  min_rois: 4
+  core_count: 9
+  num_categories: 270
+  coord_patches_per_roi: 25
+  yolo_pose_supplement: true
+  bf16_storage: true
+
+paths:
+  project_dir: /root/autodl-tmp/wh5319/silip_clip_caption
+  llm_path:    /root/autodl-tmp/wh5319/silip_clip_caption/model/vicuna-7b-v1.5
+  clip_model:  /root/autodl-tmp/wh5319/silip_clip_caption/clip_large_patch14
+  _unused_siglip_model_path: /root/autodl-tmp/wh5319/silip_clip_caption/model/siglip2-base-patch16-512  # 历史死配置, 从未被加载
+  yoloe26_ckpt: /root/autodl-tmp/wh5319/silip_clip_caption/model/yoloe26_m_seg/model.pt
+  blip2_qformer_path: /root/autodl-tmp/wh5319/silip_clip_caption/model/blip2_pretrained_flant5xxl.pth
+
+  # ── COCO 2014 图片根目录 ───────────────────────────────────────
+  # ★ V6.5: 必须是父目录 (含 train2014/ + val2014/), 因为 Karpathy
+  #   JSON 里 image 字段已经是 'train2014/xxx.jpg' / 'val2014/xxx.jpg' 的相对路径
+  coco_dir:              /root/autodl-tmp/wh5319/all_data/coco_2014
+  coco_train_images:     /root/autodl-tmp/wh5319/all_data/coco_2014
+  coco_val_images:       /root/autodl-tmp/wh5319/all_data/coco_2014
+
+  # ★ caption 字段也指向 Karpathy (跟 coco_karpathy_train_json 同源, 保险冗余)
+  coco_train_captions:   /root/autodl-tmp/wh5319/all_data/coco2014_karpathy/coco_karpathy_train.json
+  coco_val_captions:     /root/autodl-tmp/wh5319/all_data/coco2014_karpathy/coco_karpathy_val.json
+
+  # ── Box / Instances (★ V6.2.1 双 instances 合并) ─────────────────
+  # Karpathy train.json 同时含 train2014/ 和 val2014/ 路径,
+  # CocoBoxLoader 必须同时读两个 instances 合并到一起,
+  # (train2014 / val2014 的 image_id 不重叠, 合并不会冲突)
+  lvis_train_json: /root/autodl-tmp/wh5319/all_data/coco_2014/annotations/instances_train2014.json
+  lvis_val_json:   /root/autodl-tmp/wh5319/all_data/coco_2014/annotations/instances_val2014.json
+
+  # ── ★ Karpathy 118k 训练 JSON (实际训练用这个) ──────────────────
+  # run.sh 从这里读, 通过 --train_json 命令行参数显式传给 train.py
+  # 格式: [{"caption": "...", "image": "val2014/xxx.jpg", "image_id": "coco_xxx"}, ...]
+  # 扁平 list, 每条 = 1 caption, 一张图 5 条
+  coco_karpathy_train_json: /root/autodl-tmp/wh5319/all_data/coco2014_karpathy/coco_karpathy_train.json
+
+  # ── 输出 ────────────────────────────────────────────────────────
+  output_dir:   /root/autodl-tmp/wh5319/silip_clip_caption/image_captioning_final/outputs
+  features_dir: /root/autodl-tmp/wh5319/silip_clip_caption/image_captioning_final/outputs/features
+  checkpoint_dir: /root/autodl-tmp/wh5319/silip_clip_caption/image_captioning_final/outputs/checkpoints
+  log_dir:        /root/autodl-tmp/wh5319/silip_clip_caption/image_captioning_final/outputs/logs
+
+  # ── PKL 记忆库 ──────────────────────────────────────────────────
+  name_pkl: /root/autodl-tmp/wh5319/silip_clip_caption/image_captioning_final/ext_memory_lvis.pkl
+  attr_pkl: /root/autodl-tmp/wh5319/silip_clip_caption/image_captioning_final/attr_memory/attr_memory.pkl
+  attr_map: /root/autodl-tmp/wh5319/silip_clip_caption/image_captioning_final/attr_memory/name2attr_topk.json
+
+  # ── LAVIS EVA-ViT-g ─────────────────────────────────────────────
+  eva_vit_g_model: /root/autodl-tmp/wh5319/silip_clip_caption/image_captioning_final/eva_vit_g.pth
+  eva01_model:     /root/autodl-tmp/wh5319/silip_clip_caption/image_captioning_final/eva_vit_g.pth
+  eva01_arch:      LAVIS-EVA-ViT-g-14
+
+clip:
+  input_resolution: 224
+  embed_dim: 1408
+  output_dim: 1408
+  image_size: 224
+  patch_size: 14
+  patch_grid_src: 16
+  patch_grid_tgt: 8
+  freeze: true
+  daco_enabled: false
+
+eva:   # [LEGACY-RENAMED] 原 'siglip:' 段, 实际承载 EVA 多尺度融合配置
+  input_resolution: 512
+  embed_dim: 768
+  image_size: 512
+  patch_size: 16
+  patch_grid_src: 32
+  patch_grid_tgt: 16
+  roi_coord_max_patches: 25
+  freeze_stage1: true
+  finetune_stage2: true
+  mid_layer_offset: 9
+  ms_init_scale: 0.3
+
+spatial:
+  absolute_dim: 10
+  relative_dim: 12
+  hidden_dim: 256
+  output_dim: 768
+  use_qformer: true
+  qformer_queries: 32
+  qformer_heads: 12
+  qformer_layers: 12
+  clip_tower_queries: 32
+  eva_tower_queries: 32   # 原 siglip_tower_queries
+  spatial_tower_queries: 18
+  roi_detail_queries: 32
+  global_stream_queries: 32
+  object_stream_queries: 32
+  roi_select_num: 9
+  roi_per_roi_queries: 32
+  roi_align_output_size: 14
+  crossvit_bridge_layers: 2
+  dual_stream_crossvit_layers: 2
+  llip_num_mixture: 4
+
+attribute:
+  similarity_threshold: 0.27
+  embed_dim: 768
+  max_attrs_per_roi: 4
+
+decoder:
+  vocab_size: 32000
+  embed_dim: 768
+  llm_hidden: 4096
+  max_length: 64
+  dropout: 0.1
+
+lora:
+  enabled: false
+  r: 16
+  lora_alpha: 32
+  dropout: 0.05
+
+loss:
+  ntp_weight: 1.0
+  label_smoothing: 0.00
+  w_sigmoid: 0.0
+  w_roi: 0.0
+
+training:
+  total_epochs: 1
+  stage1_epochs: 0
+  stage1_lr: 1.0e-4
+  stage2_epochs: 1
+  stage2_lr: 3.0e-5
+
+  batch_size: 20
+  gradient_accumulation_steps: 2
+
+  max_rois: 9
+  core_rois: 9
+  weight_decay: 0.01
+  gradient_clip: 1.0
+  warmup_ratio: 0.05
+  device: cuda
+  use_amp: true
+  num_workers: 16
+  save_steps: 1000
+  eval_steps: 500
+  logging_steps: 1000
+
+  # ★ 每图 GT 数: TrainingConfig.num_captions (config_loader.py 用) 跟
+  #   run.sh 读的 num_captions_per_image 是同一含义, 两个都设保险起见
+  num_captions: 5
+  num_captions_per_image: 5
+
+  print_samples_every: 500
+  mode: online
+  max_len: 32
+  scst_epochs: 0
+  scst_lr: 5.0e-6
+  w_contrast: 0.0
+  contrast_warmup_steps: 500
+  w_ret_align: 0.0
+  ret_align_warmup_epochs: 0
+  unfreeze_new_modules_epoch: 99
+  soft_retriever_warmup_epochs: 0
+  soft_retriever_warmup_lr: 3.0e-4
+  ls_curriculum_epoch: 0
+
+  # ── FAST IO ──
+  dataloader_num_workers: 10
+  persistent_workers: true
+  prefetch_factor: 4
+  pin_memory: true
+
+  # ── DDP 参数 (文档性: 当前 train.py 没用 DDP, 这三个字段被 dataclass
+  #            当成动态属性吸收, 不报警告. 以后加 DDP 训练代码可直接读) ──
+  ddp_find_unused_parameters: true       # 必须 true, 有 frozen ViT/QF/decoder.llm 分支
+  ddp_gradient_as_bucket_view: true      # 省显存
+  ddp_broadcast_buffers: false           # 加速, 模型里没有 BN
+
+ablation:
+  use_attribute: true
+  use_spatial: true
+  use_distill: false
+  use_qformer: true
+  use_tag_anchor: true
+  use_dual_index: true
+  use_aoa_gate: true
+  use_ms_eva: true   # 原 use_ms_siglip, 控制 EVA 中层 patch 多尺度融合
+  ablation_name: full
+
+experiment:
+  name: caption_v6.2.1
+  seed: 42
+
+v4_pipeline:
+  core_roi_count: 9
+  noncore_roi_count: 0
