@@ -6,7 +6,7 @@
 
 Image captioning aims to generate fluent descriptions. Retrieval-augmented methods prompt a frozen LLM with external memory, but a single global embedding loses object details and causes misbinding, while the memory indexes only names, ignoring attributes. We propose DRAMCap, a dual-directional Region of Interest (ROI)-enhanced captioner. It has three core components: (1) region-level dual-memory query—pooled tokens vote for names openly, and each region retrieves attributes from its predicted class subset, eliminating misbinding; (2) a shared lightweight Q-Former for refinement and fusion—it processes retrieved names and attributes and concatenates them with the final visual features, encoding into marker-free continuous prompts for frozen Vicuna-7B; (3) global-ROI dual feedback flow—a novel bidirectional mechanism that mutually enhances global and regional features for refined representations. Our model, with only a 7B LLM, surpasses 13B image captioning models on evaluation metrics and performs well on Flickr30k, NoCaps, and WHOOPS. The code is available [here](https://github.com/wh10990448-commits/DRAMCAP).
 
-![DRAMCap architecture](assets/dramcap-framework.png)
+![DRAMCap architecture]("D:\All_my_paper_finally\com.tif")
 
 *DRAMCap framework. Full-image and region-wise visual features interact with external name and attribute memories to condition the frozen language model. Flame and snowflake icons indicate trainable and frozen modules, respectively.*
 
