@@ -1,3 +1,135 @@
+# DRAMCap: Dual-Directional ROI-Enhanced Image Captioning with Name-Attribute Dual-Memory Fusion
+
+**Lulu Wang, Hao Wang, Ruoyu Zhang, Tongling Pan, Hai Sun, and Yingna Li**
+
+## Abstract
+
+Image captioning aims to generate fluent descriptions. Retrieval-augmented methods prompt a frozen LLM with external memory, but a single global embedding loses object details and causes misbinding, while the memory indexes only names, ignoring attributes. We propose DRAMCap, a dual-directional Region of Interest (ROI)-enhanced captioner. It has three core components: (1) region-level dual-memory query—pooled tokens vote for names openly, and each region retrieves attributes from its predicted class subset, eliminating misbinding; (2) a shared lightweight Q-Former for refinement and fusion—it processes retrieved names and attributes and concatenates them with the final visual features, encoding into marker-free continuous prompts for frozen Vicuna-7B; (3) global-ROI dual feedback flow—a novel bidirectional mechanism that mutually enhances global and regional features for refined representations. Our model, with only a 7B LLM, surpasses 13B image captioning models on evaluation metrics and performs well on Flickr30k, NoCaps, and WHOOPS. The code is available [here](https://github.com/wh10990448-commits/DRAMCAP).
+
+![DRAMCap architecture](assets/dramcap-framework.png)
+
+*DRAMCap framework. Full-image and region-wise visual features interact with external name and attribute memories to condition the frozen language model. Flame and snowflake icons indicate trainable and frozen modules, respectively.*
+
+## Overview
+
+DRAMCap is a retrieval-augmented image captioning framework that combines regional visual evidence with external name and attribute memories. It conditions a frozen Vicuna-7B language model using refined visual and retrieved semantic features to generate detailed image descriptions.
+
+The accompanying paper introduces three main components:
+
+- **Region-level dual-memory retrieval:** open-vocabulary name retrieval and class-constrained attribute retrieval provide complementary evidence while reducing cross-object attribute binding errors.
+- **Shared Q-Former refinement:** retrieved names and attributes are jointly refined and combined with visual features as a marker-free continuous prompt.
+- **Global-ROI bidirectional fusion:** global and regional features exchange information, including a gated ROI-to-global feedback stream.
+
+## Architecture
+
+The paper uses a frozen EVA-CLIP visual encoder, a frozen Vicuna-7B-v1.5 language decoder, and a trainable retrieval-and-fusion pipeline. Region features are obtained through 7 x 7 ROI-Align and per-ROI Q-Former processing. The name memory follows the LVIS-derived memory used by EVCap; the attribute memory is constructed from Visual Genome, VAW, and PACO.
+
+During training, COCO instance annotations provide regions. The paper uses predicted YOLOE regions at test time. In this code snapshot, `infer.py` supports YOLOe detection and falls back to grid regions when the detector is unavailable or explicitly disabled.
+
+## Qualitative Examples
+
+![Captioning examples from Figure 3 of the paper](assets/dramcap-examples.png)
+
+*Figure 3 from the accompanying paper. Captioning examples on COCO, NoCaps, and Flickr30k compare DRAMCap with SmallCap and EVCap. The original figure highlights object names, baseline modifiers, and fine-grained attributes.*
+
+## Results Reported in the Paper
+
+The following values are reported in Tables 1 and 3 of the accompanying manuscript for DRAMCap with Vicuna-7B, trained on COCO.
+
+| Dataset / split | BLEU-4 | METEOR | CIDEr | SPICE |
+| --- | ---: | ---: | ---: | ---: |
+| COCO Karpathy test | 41.5 | 31.3 | 141.0 | 24.8 |
+| Flickr30k Karpathy test | - | - | 84.6 | 18.4 |
+| NoCaps validation, overall | - | - | 119.0 | 15.4 |
+| WHOOPS | 24.9 | 26.1 | 85.8 | 17.9 |
+
+The paper reports 19.5M trainable parameters, with the visual encoder and language model kept frozen. A dash means that the corresponding value is not listed in these paper tables.
+
+This repository snapshot contains COCO training and inference, general image inference, and Flickr30k inference and evaluation. Dedicated NoCaps and WHOOPS evaluation scripts are not included. Reproducing paper results requires matching the checkpoints, memory banks, data splits, and inference settings.
+
+## Repository Structure
+
+```text
+DRAMCAP/
+├── assets/
+│   ├── dramcap-framework.png      # High-resolution architecture figure
+│   └── dramcap-examples.png       # Qualitative examples from the paper
+├── attr_memory/
+│   ├── attr_memory.pkl            # Attribute memory
+│   └── name2attr_topk.json         # Object-to-attribute mapping
+├── caption_model/
+│   ├── model.py                   # Captioning model
+│   ├── vision_frontend.py         # EVA visual frontend
+│   ├── qformer.py                 # BLIP-2 Q-Former
+│   ├── retrieval_qformer.py       # Retrieval Q-Former modules
+│   ├── retriever.py               # Name and attribute retrieval
+│   ├── roi_pipeline.py            # ROI feature processing
+│   ├── fusion.py                  # Feature fusion
+│   ├── auxiliary.py               # Auxiliary model components
+│   ├── decoder.py                 # Language-model decoder
+│   └── ...
+├── build_attr_memory_mean.py      # Attribute-memory construction
+├── classify_vg_attrs.py           # Visual Genome attribute classification
+├── config.yaml                   # Paths and model/training configuration
+├── config.py                     # Configuration-loading entry point
+├── config_loader.py              # Configuration classes and compatibility logic
+├── ext_memory_lvis.pkl            # External name memory
+├── lavis_eva_vit.py               # Embedded EVA-ViT-g implementation
+├── spatial_encoding.py           # Spatial encoding
+├── losses.py                     # Training loss
+├── train.py                      # COCO training
+├── infer.py                      # Single-image, directory, and COCO inference
+├── infer_flickr.py               # Flickr30k inference and evaluation
+├── run.sh                        # Bash helper script
+└── eval_results_v621_yoloe.json   # Saved predictions
+```
+
+## Installation
+
+### Get the Code
+
+```bash
+git clone https://github.com/wh10990448-commits/DRAMCAP.git
+cd DRAMCAP
+```
+
+Alternatively, download and extract the repository ZIP archive.
+
+### Install Dependencies
+
+The implementation primarily targets CUDA GPUs and uses BF16 operations. Install `torch` and `torchvision` versions appropriate for your GPU and CUDA environment, then install the main Python dependencies:
+
+```bash
+pip install transformers numpy Pillow PyYAML tqdm sentencepiece ultralytics
+```
+
+For caption evaluation:
+
+```bash
+pip install pycocotools pycocoevalcap
+```
+
+For embedding-based attribute classification:
+
+```bash
+pip install sentence-transformers
+```
+
+Full caption evaluation also requires a working Java runtime for components such as PTBTokenizer, METEOR, and SPICE.
+
+The repository does not currently include a dependency lock file. Package versions must be compatible with the local PyTorch environment, Transformers APIs, and model checkpoints.
+
+## Models and Memory Banks
+
+Prepare the following resources before training or inference:
+
+| Resource | Purpose | Configuration / argument |
+| --- | --- | --- |
+| `eva_vit_g.pth` | EVA-ViT-g visual encoder | `paths.eva_vit_g_model` |
+| Vicuna-7B-v1.5 model directory | Language decoding and tokenization | `paths.llm_path` |
+| BLIP-2 pretrained checkpoint | Q-Former initialization | `paths.blip2_qformer_path` |
+| `ext_memory_lvis.pkl` | Name retrieval | `paths.name_pkl` |
+| `attr_memory.pkl` | Attribute retrieval | `paths.attr_pkl` |
 | `name2attr_topk.json` | Object-to-attribute mapping | `paths.attr_map` |
 | Trained captioning checkpoint | Inference | `--checkpoint` or `--resume` |
 
@@ -187,4 +319,4 @@ These scripts have independent default data paths. Override them through command
 
 ## Acknowledgments
 
-We acknowledge LAVIS, BLIP-2, EVCap, and the COCO, Flickr30k, LVIS, PACO, VAW, Visual Genome, NoCaps, and WHOOPS datasets and benchmarks. The architecture and qualitative-example images in this README are extracted from the accompanying DRAMCap manuscript.
+We acknowledge LAVIS, BLIP-2, EVCap, and the COCO, Flickr30k, LVIS, PACO, VAW, Visual Genome, NoCaps, and WHOOPS datasets and benchmarks. The figures illustrate the framework and qualitative results presented in the accompanying DRAMCap manuscript.
