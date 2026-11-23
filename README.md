@@ -49,6 +49,18 @@ The paper reports 19.5M trainable parameters, with the visual encoder and langua
 
 This repository snapshot contains COCO training and inference, general image inference, and Flickr30k inference and evaluation. Dedicated NoCaps and WHOOPS evaluation scripts are not included. Reproducing paper results requires matching the checkpoints, memory banks, data splits, and inference settings.
 
+## MSR-VTT Video Captioning Extension
+
+The selected DRAMCap video captioning system combines B with A/C/D caption candidates and reports **77.29 CIDEr** on the 497-video MSR-VTT validation split.
+
+| Validation configuration | CIDEr |
+| --- | ---: |
+| B, direct generation | 74.70 |
+| B, reranking its own candidates | 77.15 |
+| B plus A/C/D candidates, reranked | **77.29** |
+
+The [video captioning extension](experiments/msrvtt_b_acd/) includes the reranking code, validation results, and reproduction instructions.
+
 ## Repository Structure
 
 ```text

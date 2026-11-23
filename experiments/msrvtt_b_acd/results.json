@@ -1,0 +1,46 @@
+{
+  "dataset": "MSR-VTT",
+  "split": "val",
+  "videos": 497,
+  "references_per_video": 20,
+  "scores_times_100": {
+    "BLEU_1": 89.40267314077066,
+    "BLEU_2": 78.63625984493332,
+    "BLEU_3": 65.82882727789764,
+    "BLEU_4": 53.284204985749476,
+    "CIDEr": 77.28790527771741,
+    "ROUGE_L": 68.65857140293697,
+    "METEOR": 34.30023849827334
+  },
+  "configuration_selected_on": "val",
+  "per_video_selection_uses_validation_references": false,
+  "test_evaluated": false,
+  "references_sha256": "990b4b355ba2ff6d0842552efd222e87799855b575b26b1f52d03fb534fa4ac2",
+  "reranking": {
+    "language_model": "Vicuna-7B-v1.5",
+    "training_retrieval_videos": 6513,
+    "neighbors": 8,
+    "retrieval_weight": 0.32,
+    "additional_candidate_sources": [
+      "A",
+      "C",
+      "D"
+    ]
+  },
+  "changed_from_previous_selection": 9,
+  "cider_by_configuration": {
+    "B_direct": 74.70133124417293,
+    "B_only_reranked": 77.15184817611319,
+    "B_plus_ACD_reranked": 77.28790527771741
+  },
+  "prediction_sha256": {
+    "B_only_reranked": "f130b286dc2812d90d10134b7176df4936358bcad236149c3025806e04f512dd",
+    "B_plus_ACD_reranked": "97d2df40a1f5c1b908aa219e37e623668bef861a42d4e148195b2ed5755b5111"
+  },
+  "candidate_checkpoints": {
+    "A": "4f8ef1adf1ec549dbddf0efc43eca15b3e6865de1331c97b63bee931a5d763ee",
+    "B": "1442f51995826f9b60c3d1d8940e9d89768299dab1fefaa27204a1241ffa812c",
+    "C": "88a51a6c2bdc40a47726994198278d068be20a7e27580ec51fdf924d7fb58549",
+    "D": "65a517ff5373f464ded92074a5e0a7bae1ff2c893946bc34d6ab55865f978e5a"
+  }
+}
